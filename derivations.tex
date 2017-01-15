@@ -1,0 +1,141 @@
+\documentclass[letterpaper,12pt]{article}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage[left=1in,right=1in,top=1in,bottom=1in]{geometry}
+
+%opening
+
+\begin{document}
+\begin{flushright}29 Mar 2014\end{flushright}
+
+\begin{center}{\bf Resonances for a sum of delta functions}\end{center}
+
+\subsection*{Resonances and waves}
+
+Given a potential $V(x)$ supported on $[-a,a]$, a resonance is a 
+complex number $k$ such that
+\begin{align}\label{SE+DtN}
+ \begin{cases}
+  \left(-\frac{d^2}{dx^2} + V(x)\right)\psi = k^2 \psi
+       &\quad\text{(Schr\"odinger equation)}\\ 
+  \psi'(\pm a) = \pm \psi(\pm a)
+       &\quad\text{(scattering BC from DtN map)}
+ \end{cases}
+\end{align}
+has a nonzero solution.
+
+More generally, if $\psi$ satisfies the Schr\"odinger equation, then
+we can split $\psi$ into incident and scattered parts ($\psi = 
+\psi_{scatt} + \psi_{inc}$), where
+$\psi_{inc}(x) = Ae^{ikx}$ for some amplitude $A$ and $\psi_{scatt}$
+satisfies scattering boundary conditions. (Since scalar multiples
+of $\psi$ satisfy the same equation, we can pick out a unique solution
+by requiring $A = 1$.) {\bf Therefore, we can think of resonances as those
+numbers $k$ for which $\psi = \psi_{scatt}$.}
+
+\subsection*{Resonances as eigenvalues}
+
+Now, if $V(x)$ is a sum of delta functions, then between each of them the
+Schr\"odinger equation is simply $-\psi'' = k^2 \psi$, and therefore
+$\psi$ looks like $Ae^{ikx} + Be^{-ikx}$ for some coefficients $A$ and $B$.
+In particular, suppose the $j$-th delta function (ordered from left to right)
+is at $p_j$ and it has strength $L_j$. Then immediately to the left of $p_j$
+$\psi(x) = \psi_L(x) = A_{j-1}e^{ikx} + B_{j-1}e^{-ikx}$, and immediately to
+the right of $p_j$ $\psi(x) = \psi_R(x) = A_j e^{ikx} + B_j e^{-ikx}$. As
+shown on the Wikipedia article on delta potentials, we then have
+$\psi_L(p_j) = \psi_R(p_j)$ (continuity) and $\psi_L'(p_j) + L_j\psi(p_j) = \psi_R'(p_j)$ (jump in the derivative).
+
+These conditions on $\psi$ give conditions on the $A$s and $B$s. The
+continuity condition gives
+\begin{align*}
+A_{j-1}e^{ikp_j} + B_{j-1}e^{-ikp_j} = A_je^{ikp_j} + B_je^{-ikp_j}.
+\end{align*}
+The derivative condition can be written $\psi_L'(p_j) + L_j 
+(\psi_L(p_j) + \psi_R(p_j))/2 = \psi_R'(p_j)$, or
+$\psi_L'(p_j) + \frac{L_j}{2}\psi_L(p_j) = \psi_R'(p_j) 
+- \frac{L_j}{2}\psi_R(p_j)$, giving
+\begin{align*}
+A_{j-1}\underbrace{\left( ik + \frac{L_j}{2}\right)}_{L_j^{+}}e^{ikx} + 
+B_{j-1}\underbrace{\left(-ik + \frac{L_j}{2}\right)}_{L_j^{-}}e^{-ikx} = 
+B_j\left( ik - \frac{L_j}{2}\right)e^{ikx} +
+A_j\left(-ik - \frac{L_j}{2}\right)e^{-ikx}.
+\end{align*}
+In terms of a matrix equation, this is
+\begin{align*}
+ \begin{bmatrix}
+  e^{ikp_j} & e^{-ikp_j} & -e^{ikp_j} & -e^{-ikp_j}\\ 
+  L_j^{+}e^{ikp_j} & L_j^{-}e^{-ikp_j} & L_j^{-}e^{ikp_j} & L_j^{+}e^{-ikp_j}
+ \end{bmatrix}
+ \begin{bmatrix}A_{j-1}\\ B_{j-1}\\ B_j\\ A_j\end{bmatrix}
+ = 0,\qquad j = 1,2,...,N
+\end{align*}
+where $N$ is the total number of delta functions.
+
+Because the scattered wave $\psi_{scatt}$ is left-traveling to the 
+left of $p_1$, we
+have $A_0 = A = 1$. Since $\psi$ is right-traveling to the right
+of $p_N$, we have $B_N = 0$. This gives a complete system equations
+which lets us solve for the $A$s and $B$s. {\bf The matrix in this
+solve is called C(p,k) and is constructed in \texttt{make\_C.m}.}
+The right-hand side in this solve is just $e_1$, corresponding to
+the amplitude of the incident wave. Recalling that $k$ is a 
+resonance if $\psi = \psi_{scatt}$, {\bf $k$ is a resonance if
+$C(p,k)u = 0$ has a nonzero solution $u$}.
+
+\subsection*{Obtaining/evaluating approximations}
+
+One way to estimate resonances is to discretize~(\ref{SE+DtN}) to
+obtain $\left(M_0 + kM_1 + k^2M_2\right)\hat{\psi} = 0$ and solve
+a quadratic eigenvalue problem. {\bf This is done in 
+\texttt{resonances\_chebsol.m}.} (There are other ways, but this is
+the simplest. Other methods are contained in \texttt{beyn\_integral\_alg2.m}
+and \texttt{cheb\_eig.m} and can be chosen from within the subfunction
+\texttt{get\_resonances.m} of \texttt{get\_closest\_pair.m}.) 
+After doing so, we need to decide
+whether a resulting eigenvalue is a resonance estimate or if it is
+spurious. The na\"ive thing to do to evaluate an eigenvalue $\hat{k}$
+is to look at the smallest singular value of $C(p,\hat{k})$, which
+measures how close $C(p,\hat{k})$ is to singular. There are two big
+problems with this:
+\begin{itemize}
+ \item $C(p,\hat{k})$ depends on the absolute positions of the delta
+       functions rather than just on their positions relative
+       to one another. In fact, shifting all the delta functions
+       over by the same amount corresponds to simple row and
+       column scaling, and does not change resonances. Therefore,
+       we don't want our method of evaluating resonances to 
+       depend on such shifts.
+ \item Most columns of $C(p,\hat{k})$ are multiples of $e^{i\hat{k}p_j}$. 
+       So, if $\hat{k}$ is far from the real axis, then certain columns
+       of $C(p,\hat{k})$ will be close to zero even if $\hat{k}$ is not
+       close to a resonance.
+\end{itemize}
+
+To solve these, we scale $C$. Right multiplying by \texttt{diag}$(e^{-ikp_1},
+e^{ikp_1},...,e^{-ikp_j},e^{ikp_j},...,e^{-ikp_N},e^{ikp_N})$ and then
+left multiplying by \texttt{diag}$(e^{ikp_1},I,e^{-ikp_N})$ results in a
+matrix whose entries depend only on the distance between adjacent potentials.
+To solve the issue of certain columns getting close to zero, we then perform
+another scaling which converts from the basis $\lbrace e^{ik(p_j-p_{j+1})},
+e^{-ik(p_j-p_{j+1})} \rbrace$ to the basis $\lbrace \sin(k(p_j-p_{j+1})),
+\cos(k(p_j-p_{j+1})) \rbrace$. {\bf After this scaling we obtain the
+matrix called $R(p,k)$, constructed in \texttt{make\_R.m}.}
+$R(p,k)$ is also used in Newton iteration on a bordered system in order
+to refine a given resonance approximation. {\bf The subfunctions 
+\texttt{filter} and \texttt{refine} of \texttt{get\_closest\_pair.m}
+use $R(p,k)$.}
+
+\subsection*{Optimization}
+
+Given a certain number of delta functions, we want to minimize
+\begin{align*}
+ \varphi(p) = (k(p)-k_0)^2
+\end{align*}
+for a given number $k_0$, where $k(p)$ is the resonance closest to
+$k_0$ when the potentials are positioned at $p$.
+
+To use Newton's method, we need the gradient and Hessian of $\varphi$.
+{\bf These are computed in \texttt{make\_phi\_derivs.m}. The necessary
+derivatives of $R$ are computed in \texttt{make\_R\_derivs.m}.}
+
+
+\end{document}
